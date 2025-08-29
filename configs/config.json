@@ -1,0 +1,10 @@
+{
+    "FileExtractor": {
+        "input_location": "data/",
+        "extensions": [".jpg", ".jpeg", ".png"]
+    },
+
+    "CSVWriter": {
+        "output_location": "output/image_metadata.csv"
+    }
+}
