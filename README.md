@@ -64,11 +64,12 @@ The first version of this tool extracts the following basic metadata:
 * filesize: The size of the file in bytes.
 * width: The width of the image in pixels.
 * height: The height of the image in pixels.
+* aspect_ratio: The aspect ratio of the image.
+* average_color: The average color of the whole image.
 
 ## Future Work
 
 This project is built to be easily extended. The next planned steps include:
 
-* Extracting calculated metadata like **aspect ratio** and **average color**.
 * Performing content-based analysis, such as **face detection**.
 * Implementing **parallel processing** to significantly speed up analysis on multi-core systems.
