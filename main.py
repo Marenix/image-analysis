@@ -1,12 +1,15 @@
-from image_analyzer.analyzer import ImageAnalyzer
+from image_analyzer.analyzer import analyze_single_image, initialize_worker, DATA_HEADERS
 from image_analyzer.config_reader import ConfigReader
 from image_analyzer.file_extractor import FileExtractor
 from image_analyzer.csv_writer import CSVWriter
 import argparse
 from pathlib import Path
 import logging
+import concurrent.futures
+import time
 
 def main(args):
+    start = time.time()
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -17,14 +20,26 @@ def main(args):
     extensions = file_extractor_config.get("extensions", [".png", ".jpg"])
 
     file_extractor = FileExtractor(input_location, extensions)
-    image_analyzer = ImageAnalyzer()
 
-    results_generator = image_analyzer.analyze(file_extractor.get_file_paths())
+    image_analyzer_config = config_reader.get_setting("AnalyzerSettings", {})
+    face_detection_model_path = Path(image_analyzer_config.get("face_detection_model_path", "models/haarcascade_frontalface_default.xml"))
+
+    with concurrent.futures.ProcessPoolExecutor(
+        initializer=initialize_worker,
+        initargs=(face_detection_model_path,)
+    ) as executor:
+        raw_results_generator = executor.map(analyze_single_image, file_extractor.get_file_paths())
+
+    valid_results = (result for result in raw_results_generator if result is not None)
 
     csv_writer_config = config_reader.get_setting("CSVWriter", {})
     output_location = Path(csv_writer_config.get("output_location", Path("output.csv")))
-    csv_writer = CSVWriter(output_location, image_analyzer.DATA_HEADERS)
-    csv_writer.write_data(results_generator)
+    csv_writer = CSVWriter(output_location, DATA_HEADERS)
+    csv_writer.write_data(valid_results)
+
+    end = time.time()
+
+    logging.info(f"Time needed for processing all images: {end - start}")
 
 
 
