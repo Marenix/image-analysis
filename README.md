@@ -1,14 +1,15 @@
 # Image Analysis CLI Tool
 
-A robust, configurable command-line tool written in Python for performing batch analysis on image datasets. This tool recursively scans a directory for image files, extracts key metadata, and saves the results in a structured CSV file.
+A robust, configurable command-line tool written in Python for performing batch analysis on image datasets. This tool recursively scans a directory for image files, extracts key metadata, and saves the results in a structured CSV file. The tool uses parallel processing to speed up analysis on multi-core systems.
 
 ## Key Features
 
-* **Configurable:** All key parameters (input folder, output file, file extensions) are managed externally in a JSON file (example configs/config.json).
+* **Configurable:** All key parameters (input folder, output file, file extensions) are managed externally in a JSON file (example: configs/config.json).
 * **Robust Error Handling:** The application is designed to be resilient. It gracefully handles common errors such as missing directories, invalid image files, and file permissions.
 * **Memory Efficient:** Uses a streaming approach (Python generators) to process a large number of images with a very low and constant memory footprint.
 * **Platform Independent:** Built with pathlib to ensure it runs correctly on Windows, macOS, and Linux.
 * **Clean Architecture:** The code is logically separated into distinct, reusable, and testable modules (ConfigReader, FileExtractor, ImageAnalyzer, CSVWriter).
+* **Parallel Processing:** Parallel processing implemented for image analysis to speed up the biggest bottleneck in the pipeline.
 
 ## Setup and Installation
 
@@ -19,9 +20,9 @@ A robust, configurable command-line tool written in Python for performing batch 
 ```
 
 2. Install dependencies:
-   This project requires the Pillow library for image processing.
+   This project requires the Pillow library and OpenCV for image processing.
 ```bash
-   pip install Pillow
+   pip install -r requirements.txt
 ```
 
    *(Note: All other required modules like pathlib and logging are part of the standard Python library.)*
@@ -58,7 +59,7 @@ The script will then process the images and generate the CSV file in the locatio
 
 ## Current Extracted Data
 
-The first version of this tool extracts the following basic metadata:
+The current version of this tool extracts the following basic metadata:
 
 * filename: The name of the image file.
 * filesize: The size of the file in bytes.
@@ -66,10 +67,12 @@ The first version of this tool extracts the following basic metadata:
 * height: The height of the image in pixels.
 * aspect_ratio: The aspect ratio of the image.
 * average_color: The average color of the whole image.
+* num_of_faces: The number of faces detected in the image.
 
 ## Future Work
 
 This project is built to be easily extended. The next planned steps include:
 
-* Performing content-based analysis, such as **face detection**.
-* Implementing **parallel processing** to significantly speed up analysis on multi-core systems.
+* Add additional CLI arguments to override config arguments for ease-of-use in some cases.
+* Add a flag to save images with bounding-boxes around detected faces.
+* Perform object detection in the image to detect some common/interesting objects.

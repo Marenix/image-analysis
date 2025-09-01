@@ -1,10 +1,14 @@
 {
     "FileExtractor": {
-        "input_location": "data/",
+        "input_location": "data/face_test",
         "extensions": [".jpg", ".jpeg", ".png"]
     },
 
     "CSVWriter": {
         "output_location": "output/image_metadata.csv"
+    },
+
+    "AnalyzerSettings": {
+        "face_detection_model_path": "models/face_detection_yunet_2023mar.onnx"
     }
 }
