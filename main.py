@@ -16,7 +16,7 @@ def main(args):
     config_reader = ConfigReader(args.config_path)
     file_extractor_config = config_reader.get_setting("FileExtractor", {})
 
-    input_location = Path(file_extractor_config.get("input_location", Path("data/")))
+    input_location = Path(file_extractor_config.get("input_location", Path("data/"))) if args.input_location is None else args.input_location
     extensions = file_extractor_config.get("extensions", [".png", ".jpg"])
 
     file_extractor = FileExtractor(input_location, extensions)
@@ -33,7 +33,7 @@ def main(args):
     valid_results = (result for result in raw_results_generator if result is not None)
 
     csv_writer_config = config_reader.get_setting("CSVWriter", {})
-    output_location = Path(csv_writer_config.get("output_location", Path("output.csv")))
+    output_location = Path(csv_writer_config.get("output_location", Path("output.csv"))) if args.output_location is None else args.output_location
     csv_writer = CSVWriter(output_location, DATA_HEADERS)
     csv_writer.write_data(valid_results)
 
@@ -49,7 +49,9 @@ if __name__ == '__main__':
         prog="ImageAnalyzer",
         description="Find and return all files in a specified folder and all subfolders"
     )
-    parser.add_argument("--config_path", required=True, help="Path to config")
+    parser.add_argument("--config_path", required=True, help="Path to config in JSON format")
+    parser.add_argument("--input_location", required=False, help="Path to the input location")
+    parser.add_argument("--output_location", required=False, help="Path to CSV output file (including output file name)")
     args = parser.parse_args()
 
     main(args)

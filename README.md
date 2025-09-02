@@ -51,6 +51,10 @@ Before running the application, create your JSON config file in configs/. You ca
 
 Execute the main.py script from the root directory of the project, providing the path to your configuration file.
 
+Optional arguments:
+* --input_location: Path to the input folder.
+* --output_location: Path to the output folder (including the CSV file name).
+
 ```bash
 python main.py --config_path configs/config.json
 ```
@@ -73,6 +77,5 @@ The current version of this tool extracts the following basic metadata:
 
 This project is built to be easily extended. The next planned steps include:
 
-* Add additional CLI arguments to override config arguments for ease-of-use in some cases.
 * Add a flag to save images with bounding-boxes around detected faces.
 * Perform object detection in the image to detect some common/interesting objects.
