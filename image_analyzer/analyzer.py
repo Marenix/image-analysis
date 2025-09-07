@@ -9,6 +9,8 @@ from typing import Optional
 DATA_HEADERS = ['filename', 'filesize', 'width', 'height', 'aspect_ratio', 'average_color', 'num_of_faces']
 
 face_detector = None
+visualize = False
+save_location = Path("/output/visualize")
 
 def get_average_color(image: Image) -> str:
     """Calculates the average color of the image and returns a hex string"""
@@ -29,29 +31,61 @@ def calculate_aspect_ratio(width: int, height: int) -> str:
         logging.warning("Image has a height of 0, cannot calculate aspect ratio.")
         return "N/A"
     
-def get_number_of_faces_in_image(img_bgr: cv2.Mat) -> int:
-    """Detects faces in an image, returns the number of faces found"""
+def visualize_images_with_faces(img_bgr: cv2.Mat, faces: cv2.Mat, image_name: str):
+    """Draw rectangle around each found face and save the image to output location.
+
+    Args:
+        img_bgr (cv2.Mat): Image on which the faces were detected.
+        faces (cv2.Mat): Information on detected face positions.
+        image_name (str): Filename of the original image.
+    """
+    for row in faces[1]:
+        cv2.rectangle(img_bgr, (round(row[0]), round(row[1])), (round(row[0])+round(row[2]), round(row[1])+round(row[3])), (0,255,0), 4)
+    cv2.imwrite(str(save_location / image_name), img_bgr)
+    
+def get_number_of_faces_in_image(img_bgr: cv2.Mat, image_name:str) -> int:
+    """Detects faces in an image, returns the number of faces found."""
     faces = face_detector.detect(img_bgr)
 
     if faces[1] is not None:
+        if visualize:
+            visualize_images_with_faces(img_bgr, faces, image_name)
         return len(faces[1])
     return 0
 
-def initialize_worker(model_path: Path):
+def _prepare_directory(output_file: Path):
+        """Ensures the parent directory for the output file exists."""
+        try:
+            output_file.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            logging.error(f"Error: Permission denied to create directory {output_file}")
+            raise
+
+def initialize_worker(model_path: Path, save_example: bool, output_location: Path):
     """An initializer function that is run once per worker process.
     Loads the face detection model into the global variable for that process.
+    Sets flag for saving images with bounding boxed around detected faces.
+    Saves the output location used for saving images using output_location/visualize
+    folder.
     
     Args:
-        model_path (Path): Path to the model to be used
+        model_path (Path): Path to the model to be used.
+        save_example (bool): True if images want to be saved.
+        output_location (Path): Path to the folder used for saving.
     """
     global face_detector
     logging.info(f"Initialiting worker with model: {model_path}")
     face_detector = cv2.FaceDetectorYN.create(str(model_path),
                                                 "",
                                                 (320, 320))
+    
+    global visualize, save_location
+    visualize = save_example
+    save_location = output_location / "visualize"
+    _prepare_directory(save_location)
 
 def analyze_single_image(path: Path) -> Optional[dict]:
-    """Performs all analysis for a single image file
+    """Performs all analysis for a single image file.
     
     The function receives a path to a single image, extracts all specified
     metadata and information and returns is as a dictionary.
@@ -71,7 +105,7 @@ def analyze_single_image(path: Path) -> Optional[dict]:
         height, width, _ = img_bgr.shape
         face_detector.setInputSize((width, height))
 
-        number_of_faces = get_number_of_faces_in_image(img_bgr)
+        number_of_faces = get_number_of_faces_in_image(img_bgr, path.name)
         
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(img_rgb)

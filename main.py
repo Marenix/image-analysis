@@ -23,17 +23,21 @@ def main(args):
 
     image_analyzer_config = config_reader.get_setting("AnalyzerSettings", {})
     face_detection_model_path = Path(image_analyzer_config.get("face_detection_model_path", "models/haarcascade_frontalface_default.xml"))
+    visualize = bool(image_analyzer_config.get("visualize", False)) if args.visualize is False else True
+
+    csv_writer_config = config_reader.get_setting("CSVWriter", {})
+    output_location = Path(csv_writer_config.get("output_location", Path("output.csv"))) if args.output_location is None else args.output_location
+
+    image_location = output_location.parent
 
     with concurrent.futures.ProcessPoolExecutor(
         initializer=initialize_worker,
-        initargs=(face_detection_model_path,)
+        initargs=(face_detection_model_path, visualize, Path(image_location))
     ) as executor:
         raw_results_generator = executor.map(analyze_single_image, file_extractor.get_file_paths())
 
     valid_results = (result for result in raw_results_generator if result is not None)
 
-    csv_writer_config = config_reader.get_setting("CSVWriter", {})
-    output_location = Path(csv_writer_config.get("output_location", Path("output.csv"))) if args.output_location is None else args.output_location
     csv_writer = CSVWriter(output_location, DATA_HEADERS)
     csv_writer.write_data(valid_results)
 
@@ -52,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument("--config_path", required=True, help="Path to config in JSON format")
     parser.add_argument("--input_location", required=False, help="Path to the input location")
     parser.add_argument("--output_location", required=False, help="Path to CSV output file (including output file name)")
+    parser.add_argument("--visualize", required=False, action="store_true", help="Save images with bounding boxes around detected faces")
     args = parser.parse_args()
 
     main(args)
