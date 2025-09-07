@@ -1,6 +1,6 @@
 {
     "FileExtractor": {
-        "input_location": "data/face_test",
+        "input_location": "data/Initial_dataset",
         "extensions": [".jpg", ".jpeg", ".png"]
     },
 
@@ -9,6 +9,7 @@
     },
 
     "AnalyzerSettings": {
-        "face_detection_model_path": "models/face_detection_yunet_2023mar.onnx"
+        "face_detection_model_path": "models/face_detection_yunet_2023mar.onnx",
+        "visualize": false
     }
 }
