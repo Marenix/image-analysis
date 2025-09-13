@@ -7,6 +7,7 @@ from pathlib import Path
 import logging
 import concurrent.futures
 import time
+from os import cpu_count
 
 def main(args):
     start = time.time()
@@ -32,9 +33,11 @@ def main(args):
 
     with concurrent.futures.ProcessPoolExecutor(
         initializer=initialize_worker,
-        initargs=(face_detection_model_path, visualize, Path(image_location))
+        initargs=(face_detection_model_path, visualize, Path(image_location)),
+        max_workers=max(cpu_count() - 2, 1)
     ) as executor:
         raw_results_generator = executor.map(analyze_single_image, file_extractor.get_file_paths())
+    
 
     valid_results = (result for result in raw_results_generator if result is not None)
 
